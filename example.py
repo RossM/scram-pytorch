@@ -12,7 +12,7 @@ def main():
     target = torch.tensor([0, 0, 0, 1, 1], dtype=float)
     loss_fn = nn.MSELoss()
     
-    optimizer = Scram([p], lr=0.5)
+    optimizer = Scram([p], lr=0.5, betas=(0.9,0.9))
     
     for step in range(100):
         optimizer.zero_grad()
