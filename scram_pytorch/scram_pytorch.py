@@ -8,7 +8,7 @@ class Scram(Optimizer):
         lr: float = 1e-4,
         beta: float = 0.9,
         weight_decay: float = 0,
-        epsilon: float = 1e-15,
+        eps: float = 1e-15,
     ):
         assert lr > 0.
         assert 0. <= beta < 1.
@@ -17,7 +17,7 @@ class Scram(Optimizer):
             lr = lr,
             beta = beta,
             weight_decay = weight_decay,
-            epsilon = epsilon,
+            eps = eps,
         )
         
         super().__init__(params, defaults)
@@ -30,7 +30,7 @@ class Scram(Optimizer):
                 lr = group["lr"]
                 wd = group["weight_decay"]
                 beta = group["beta"]
-                epsilon = group["epsilon"]
+                eps = group["eps"]
                 state = self.state[p]
                 
                 if len(state) == 0:
@@ -38,7 +38,7 @@ class Scram(Optimizer):
                     
                 exp_avg = state['exp_avg']
                 
-                rms = torch.clamp((grad ** 2).mean() ** 0.5, min=epsilon)
+                rms = torch.clamp((grad ** 2).mean() ** 0.5, min=eps)
                 
                 exp_avg.mul_(beta).add_(grad, alpha = (1 - beta) / rms)
                 p.data.mul_(1 - lr * wd)
