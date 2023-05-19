@@ -23,7 +23,12 @@ class Scram(Optimizer):
         super().__init__(params, defaults)
         
     @torch.no_grad()
-    def step(self):
+    def step(self, closure=None):
+        loss =  None
+        if closure != None:
+            with torch.enable_grad():
+                loss = closure()
+    
         for group in self.param_groups:
             for p in filter(lambda p: p.grad is not None, group['params']):
                 grad = p.grad
@@ -43,3 +48,5 @@ class Scram(Optimizer):
                 exp_avg.mul_(beta).add_(grad, alpha = (1 - beta) / rms)
                 p.data.mul_(1 - lr * wd)
                 p.add_(exp_avg, alpha=-lr)
+        
+        return loss
