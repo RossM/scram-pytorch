@@ -8,7 +8,7 @@ def main():
                            [1, 1, 0, 0],
                            [0, 0, 1, 1],
                            [1, 1, 0, 1],
-                           [1, 0, 1, 1]], dtype=float)
+                           [1, 0, 1, 0]], dtype=float)
     target = torch.tensor([0, 0, 0, 1, 1], dtype=float)
     loss_fn = nn.MSELoss()
     
