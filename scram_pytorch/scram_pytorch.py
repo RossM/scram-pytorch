@@ -47,8 +47,8 @@ class Scram(Optimizer):
                 p.data.mul_(1 - lr * wd)
                 
                 rms = torch.clamp((grad ** 2).mean() ** 0.5, min=eps)
-                update = exp_avg.clone().mul_(beta1).add(grad, alpha = (1 - beta1) / rms)
-                p.add_(update, alpha=-lr)
-                exp_avg.mul_(beta2).add_(grad, alpha = (1 - beta2) / rms)
+                update = exp_avg.clone().mul_(beta1).add(grad, alpha = 1 - beta1)
+                p.add_(update, alpha=-lr / rms)
+                exp_avg.mul_(beta2).add_(grad, alpha = 1 - beta2)
         
         return loss
