@@ -48,11 +48,12 @@ class SDM(Optimizer):
 
                 p.data.mul_(1 - lr * wd)
                 
-                exp_avg.mul_(beta1).add_(grad, alpha=1-beta1)
-                exp_avg_sq.mul_(beta1).add_(grad**2, alpha=1-beta1)
+                exp_avg.mul_(beta2).add_(grad, alpha=1-beta2)
+                exp_avg_sq.mul_(beta2).add_(grad**2, alpha=1-beta2)
                 
                 stdev = (exp_avg_sq - exp_avg ** 2) ** 0.5
-                update = exp_avg / (stdev + eps)
-                p.add_(update, alpha=-lr * beta1)
+                update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
+                update = update / (stdev + eps)
+                p.add_(update, alpha=-lr * beta2)
         
         return loss
