@@ -1,12 +1,12 @@
 import torch
-from scram_pytorch import Scram
+from scram_pytorch import Scram, SDM
 import torch.nn as nn
 
-def optimize(inputs, target):
+def optimize(inputs, target, optimizer_class):
     p = nn.Parameter(torch.zeros([inputs.shape[1]], dtype=torch.float32))
     loss_fn = nn.MSELoss()
     
-    optimizer = Scram([p], lr=0.5, weight_decay=0.1)
+    optimizer = optimizer_class([p], lr=0.5, weight_decay=0.1)
     
     for step in range(100):
         optimizer.zero_grad()
@@ -27,7 +27,7 @@ def main():
                            [1, 0, 1, 0]], dtype=torch.float32)
     target = torch.tensor([0, 0, 0, 1, 1], dtype=torch.float32)
     print("Original")
-    optimize(inputs, target)
+    optimize(inputs, target, SDM)
     
     rotation = torch.tensor([[1, -1, 0, 0],
                              [1, 1, 0, 0],
@@ -35,7 +35,7 @@ def main():
                              [0, 0, 1, 1]], dtype=torch.float32) * (2 ** -0.5)
     inputs = torch.matmul(inputs, rotation)
     print("Rotated")
-    optimize(inputs, target)
+    optimize(inputs, target, SDM)
 
 if __name__ == "__main__":
     main()
