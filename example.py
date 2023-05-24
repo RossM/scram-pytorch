@@ -8,7 +8,7 @@ def parse_args():
     parser.add_argument("--beta1", type=float, default=0.9, help="Optimizer beta 1")
     parser.add_argument("--beta2", type=float, default=0.99, help="Optimizer beta 2")
     parser.add_argument("--learning_rate", "--lr", type=float, default=0.5, help="Optimizer learning rate")
-    parser.add_argument("--weight_decay", type=float, default=0.1, help="Optimizer weight decay")
+    parser.add_argument("--weight_decay", type=float, default=1, help="Optimizer weight decay")
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
     parser.add_argument("--rmsclip", action="store_true", help="Rurn on RMS clipping (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
@@ -43,14 +43,20 @@ def main():
         "lr": args.learning_rate,
         "betas": (args.beta1, args.beta2),
         "weight_decay": args.weight_decay,
-        "epsilon": args.epsilon,
-        "rmsclip": args.rmsclip,
+        "eps": args.epsilon,
     }
     
     if args.optimizer == "Scram":
         optimizer_class = Scram
     elif args.optimizer == "Simon":
         optimizer_class = Simon
+        opt_args["rmsclip"] = args.rmsclip
+    elif args.optimizer == "AdamW":
+        optimizer_class = torch.optim.AdamW
+    elif args.optimizer == "Lion":
+        from lion_pytorch import Lion
+        optimizer_class = Lion
+        del opt_args["eps"]
     else:
         raise ValueError(f"Unknown optimizer {args.optimizer}")
 
