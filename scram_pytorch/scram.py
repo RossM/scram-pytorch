@@ -10,6 +10,7 @@ class Scram(Optimizer):
         betas = (0.9, 0.99),
         weight_decay: float = 0,
         eps: float = 1e-15,
+        **kwargs,
     ):
         assert lr > 0.
         assert 0. <= betas[0] <= 1.
