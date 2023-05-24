@@ -27,14 +27,14 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
     for step in range(steps):
         optimizer.zero_grad()
         pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
-        loss = loss_fn(pred, target) + 0.1 * p.norm(p=2)
+        loss = loss_fn(pred, target) + 0.1 * (p ** 2).sum()
         if print_all_steps:
             print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
         optimizer.step()
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
-    loss = loss_fn(pred, target) + 0.1 * p.norm(p=2)
+    loss = loss_fn(pred, target) + 0.1 * (p ** 2).sum()
     print(f"step={steps}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
 
 def main():
