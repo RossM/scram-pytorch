@@ -2,6 +2,7 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 class Simon(Optimizer):
+    """SIgma MOmeNtum (SIMON) optimizer"""
     def __init__(
         self,
         params,

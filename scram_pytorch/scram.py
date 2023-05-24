@@ -2,6 +2,7 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 class Scram(Optimizer):
+    """SCale and Rotation invAriant Momentum (SCRAM) optimizer"""
     def __init__(
         self,
         params,
