@@ -2,7 +2,12 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 class Simon(Optimizer):
-    """SIgma MOmeNtum (SIMON) optimizer"""
+    """SIgma MOmeNtum (SIMON) optimizer
+    
+    This optimizer uses the standard deviation of each gradient over time, computed
+    using an exponential moving average, as an estimate of the second derivative of
+    the loss in order to take small steps when loss is changing quickly and large
+    steps when it is changing smoothly."""
     def __init__(
         self,
         params,
@@ -55,6 +60,8 @@ class Simon(Optimizer):
                 stdev = (exp_avg_sq - exp_avg ** 2) ** 0.5
                 update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
                 update = update / (stdev + eps)
+                # The factor of beta2 corrects stdev from a population standard deviation to a
+                # sample standard deviation
                 p.add_(update, alpha=-lr * beta2)
         
         return loss
