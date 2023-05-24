@@ -8,7 +8,7 @@ def parse_args():
     parser.add_argument("--beta1", type=float, default=0.9, help="Optimizer beta 1")
     parser.add_argument("--beta2", type=float, default=0.99, help="Optimizer beta 2")
     parser.add_argument("--learning_rate", "--lr", type=float, default=0.5, help="Optimizer learning rate")
-    parser.add_argument("--weight_decay", type=float, default=1, help="Optimizer weight decay")
+    parser.add_argument("--weight_decay", type=float, default=0, help="Optimizer weight decay")
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
     parser.add_argument("--rmsclip", action="store_true", help="Rurn on RMS clipping (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
@@ -27,14 +27,14 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
     for step in range(steps):
         optimizer.zero_grad()
         pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
-        loss = loss_fn(pred, target)
+        loss = loss_fn(pred, target) + 0.1 * p.norm(p=2)
         if print_all_steps:
             print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
         optimizer.step()
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
-    loss = loss_fn(pred, target)
+    loss = loss_fn(pred, target) + 0.1 * p.norm(p=2)
     print(f"step={steps}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
 
 def main():
