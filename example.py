@@ -1,5 +1,5 @@
 import torch
-from scram_pytorch import Scram, SDM
+from scram_pytorch import Scram, Simon
 import torch.nn as nn
 
 def optimize(inputs, target, optimizer_class):
@@ -27,7 +27,7 @@ def main():
                            [1, 0, 1, 0]], dtype=torch.float32)
     target = torch.tensor([0, 0, 0, 1, 1], dtype=torch.float32)
     print("Original")
-    optimize(inputs, target, SDM)
+    optimize(inputs, target, Simon)
     
     rotation = torch.tensor([[1, -1, 0, 0],
                              [1, 1, 0, 0],
@@ -35,7 +35,7 @@ def main():
                              [0, 0, 1, 1]], dtype=torch.float32) * (2 ** -0.5)
     inputs = torch.matmul(inputs, rotation)
     print("Rotated")
-    optimize(inputs, target, SDM)
+    optimize(inputs, target, Simon)
 
 if __name__ == "__main__":
     main()
