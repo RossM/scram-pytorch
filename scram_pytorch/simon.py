@@ -46,7 +46,7 @@ class Simon(Optimizer):
                 wd = group["weight_decay"]
                 beta1, beta2 = group["betas"]
                 eps = group["eps"]
-                rmsclip = group["rmsclip"]
+                rmsclip = group["rmsclip"] if "rmsclip" in group else False
                 state = self.state[p]
                 
                 if len(state) == 0:
