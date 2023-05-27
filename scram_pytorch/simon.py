@@ -16,6 +16,7 @@ class Simon(Optimizer):
         weight_decay: float = 0,
         eps: float = 1e-15,
         rmsclip: bool = False,
+        layerwise: bool = False,
         **kwargs,
     ):
         assert lr > 0.
@@ -28,6 +29,7 @@ class Simon(Optimizer):
             weight_decay = weight_decay,
             eps = eps,
             rmsclip = rmsclip,
+            layerwise = layerwise,
         )
         
         super().__init__(params, defaults)
@@ -46,7 +48,8 @@ class Simon(Optimizer):
                 wd = group["weight_decay"]
                 beta1, beta2 = group["betas"]
                 eps = group["eps"]
-                rmsclip = group["rmsclip"] if "rmsclip" in group else False
+                rmsclip = group.get("rmsclip", False)
+                layerwise = group.get("layerwise", False)
                 state = self.state[p]
                 
                 if len(state) == 0:
@@ -61,7 +64,10 @@ class Simon(Optimizer):
                 exp_avg.mul_(beta2).add_(grad, alpha=1-beta2)
                 exp_avg_sq.mul_(beta2).add_(grad**2, alpha=1-beta2)
                 
-                stdev = (exp_avg_sq - exp_avg ** 2) ** 0.5
+                if layerwise:
+                    stdev = (exp_avg_sq - exp_avg ** 2).mean() ** 0.5
+                else:
+                    stdev = (exp_avg_sq - exp_avg ** 2) ** 0.5
                 update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
                 if rmsclip:
                     rms = (update ** 2).mean() ** 0.5
