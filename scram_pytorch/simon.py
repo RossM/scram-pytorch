@@ -17,6 +17,7 @@ class Simon(Optimizer):
         eps: float = 1e-15,
         rmsclip: bool = False,
         layerwise: bool = False,
+        normalize: bool = False,
         **kwargs,
     ):
         assert lr > 0.
@@ -30,6 +31,7 @@ class Simon(Optimizer):
             eps = eps,
             rmsclip = rmsclip,
             layerwise = layerwise,
+            normalize = normalize,
         )
         
         super().__init__(params, defaults)
@@ -50,6 +52,7 @@ class Simon(Optimizer):
                 eps = group["eps"]
                 rmsclip = group.get("rmsclip", False)
                 layerwise = group.get("layerwise", False)
+                normalize = group.get("normalize", False)
                 state = self.state[p]
                 
                 if len(state) == 0:
@@ -58,6 +61,9 @@ class Simon(Optimizer):
                     
                 exp_avg = state['exp_avg']
                 exp_avg_sq = state['exp_avg_sq']
+                
+                if normalize:
+                    grad = grad / max((grad ** 2).mean() ** 0.5, eps)
 
                 p.data.mul_(1 - lr * wd)
                 
