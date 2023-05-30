@@ -71,7 +71,8 @@ class Simon(Optimizer):
                     state['exp_avg_sq'] = torch.zeros_like(p)
 
                 if self.autolr and loss != None:
-                    if self.last_lr != None:                        
+                    if self.last_lr != None:
+                        loss = loss.item()
                         lr_diff = self.last_lr - self.exp_lr
                         loss_diff = loss - self.exp_loss
                         autolr_beta = min(self.autolr_steps / (self.autolr_steps+ 1), self.autolr_beta)
