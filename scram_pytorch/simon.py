@@ -74,12 +74,12 @@ class Simon(Optimizer):
                     if self.last_lr != None:                        
                         lr_diff = self.last_lr - self.exp_lr
                         loss_diff = loss - self.exp_loss
+                        autolr_beta = min(self.autolr_steps / (self.autolr_steps+ 1), self.autolr_beta)
                         self.autolr_steps += 1
-                        autolr_beta = min(1 / self.autolr_steps, self.autolr_beta)
                         self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * lr_diff
                         self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_diff
                         self.exp_lr_corr = autolr_beta * self.exp_lr_corr + (1 - autolr_beta) * lr_diff * loss_diff
-                        self.autolr *= 1 + 0.01 * numpy.sign(self.exp_lr_corr)
+                        self.autolr *= 1 - 0.01 * numpy.sign(self.exp_lr_corr)
                         #print(f"self.exp_loss={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_lr_corr={self.exp_lr_corr}, self.autolr={self.autolr}")
                         
                     cur_lr = self.autolr * random.uniform(0.9, 1.1)
