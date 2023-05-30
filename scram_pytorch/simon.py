@@ -72,7 +72,8 @@ class Simon(Optimizer):
 
                 if self.autolr and loss != None:
                     if self.last_lr != None:
-                        loss = loss.item()
+                        if loss.__class__ == torch.Tensor:
+                            loss = loss.item()
                         lr_diff = self.last_lr - self.exp_lr
                         loss_diff = loss - self.exp_loss
                         autolr_beta = min(self.autolr_steps / (self.autolr_steps+ 1), self.autolr_beta)
