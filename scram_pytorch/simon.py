@@ -81,7 +81,7 @@ class Simon(Optimizer):
                         self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * lr_diff
                         self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_diff
                         self.exp_lr_corr = autolr_beta * self.exp_lr_corr + (1 - autolr_beta) * lr_diff * loss_diff
-                        if autolr_steps >= 100:
+                        if self.autolr_steps >= 100:
                             self.lr_mult *= 1 - 0.001 * numpy.sign(self.exp_lr_corr)
                         #print(f"self.exp_loss={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_lr_corr={self.exp_lr_corr}, self.autolr={self.autolr}")
                         
