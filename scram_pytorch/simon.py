@@ -1,4 +1,5 @@
-import torch
+import random
+import torch, numpy
 from torch.optim.optimizer import Optimizer
 
 class Simon(Optimizer):
@@ -18,7 +19,8 @@ class Simon(Optimizer):
         rmsclip: bool = False,
         layerwise: bool = False,
         normalize: bool = False,
-        **kwargs,
+        autolr: bool = False,
+        autolr_beta: float = 0.99,
     ):
         assert lr > 0.
         assert 0. <= betas[0] <= 1.
@@ -34,11 +36,20 @@ class Simon(Optimizer):
             normalize = normalize,
         )
         
+        self.autolr = autolr
+        self.autolr_beta = autolr_beta
+        self.last_lr = None
+        self.lr_mult = 1
+        self.autolr_steps = 0
+        self.exp_loss = 0
+        self.exp_lr = 0
+        self.exp_lr_corr = 0
+        
         super().__init__(params, defaults)
         
     @torch.no_grad()
     def step(self, closure=None):
-        loss =  None
+        loss = None
         if closure != None:
             with torch.enable_grad():
                 loss = closure()
@@ -58,6 +69,25 @@ class Simon(Optimizer):
                 if len(state) == 0:
                     state['exp_avg'] = torch.zeros_like(p)
                     state['exp_avg_sq'] = torch.zeros_like(p)
+
+                if self.autolr and loss != None:
+                    if self.last_lr != None:                        
+                        lr_diff = self.last_lr - self.exp_lr
+                        loss_diff = loss - self.exp_loss
+                        self.autolr_steps += 1
+                        autolr_beta = min(1 / self.autolr_steps, self.autolr_beta)
+                        self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * lr_diff
+                        self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_diff
+                        self.exp_lr_corr = autolr_beta * self.exp_lr_corr + (1 - autolr_beta) * lr_diff * loss_diff
+                        self.autolr *= 1 + 0.01 * numpy.sign(self.exp_lr_corr)
+                        #print(f"self.exp_loss={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_lr_corr={self.exp_lr_corr}, self.autolr={self.autolr}")
+                        
+                    cur_lr = self.autolr * random.uniform(0.9, 1.1)
+                    
+                    self.last_loss = loss
+                    self.last_lr = cur_lr
+                else:
+                    cur_lr = 1
                     
                 exp_avg = state['exp_avg']
                 exp_avg_sq = state['exp_avg_sq']
@@ -81,6 +111,6 @@ class Simon(Optimizer):
                 update = update / (stdev + eps)
                 # The factor of beta2 corrects stdev from a population standard deviation to a
                 # sample standard deviation
-                p.add_(update, alpha=-lr * beta2)
+                p.add_(update, alpha=-lr * beta2 * cur_lr)
         
         return loss

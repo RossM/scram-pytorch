@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
     parser.add_argument("--rmsclip", action="store_true", help="Turn on RMS clipping (Simon only)")
     parser.add_argument("--layerwise", action="store_true", help="Layerwise scaling (Simon only)")
+    parser.add_argument("--autolr", action="store_true", help="Automatic learning rate adjustment (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
     parser.add_argument("--steps", type=int, default=100, help="Number of optimization steps to perform")
     parser.add_argument("--print_all_steps", action="store_true", help="Print all optimization steps")
@@ -31,7 +32,7 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
         if print_all_steps:
             print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
-        optimizer.step()
+        optimizer.step(lambda: loss)
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
     loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
@@ -52,6 +53,7 @@ def main():
         optimizer_class = Simon
         opt_args["rmsclip"] = args.rmsclip
         opt_args["layerwise"] = args.layerwise
+        opt_args["autolr"] = args.autolr
     elif args.optimizer == "AdamW":
         optimizer_class = torch.optim.AdamW
     elif args.optimizer == "Lion":
