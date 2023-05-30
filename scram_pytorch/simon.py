@@ -41,8 +41,8 @@ class Simon(Optimizer):
         self.last_lr = None
         self.lr_mult = 1
         self.autolr_steps = 0
-        self.exp_loss = 0
-        self.exp_lr = 0
+        self.exp_loss = self.exp_loss_sq = 0
+        self.exp_lr = self.exp_lr_sq = 0
         self.exp_lr_corr = 0
         
         super().__init__(params, defaults)
@@ -58,21 +58,27 @@ class Simon(Optimizer):
             if self.last_lr != None:
                 if loss.__class__ == torch.Tensor:
                     loss = loss.item()
+                loss_delta = loss - self.last_loss
                 lr_diff = self.last_lr - self.exp_lr
-                loss_diff = loss - self.exp_loss
+                loss_diff = loss_delta - self.exp_loss
                 autolr_beta = min(self.autolr_steps / (self.autolr_steps+ 1), self.autolr_beta)
                 self.autolr_steps += 1
-                self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * lr_diff
-                self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_diff
-                self.exp_lr_corr = autolr_beta * self.exp_lr_corr + (1 - autolr_beta) * lr_diff * loss_diff
-                if self.autolr_steps >= 100:
-                    self.lr_mult *= 1.01 ** -numpy.sign(self.exp_lr_corr)
-                #print(f"self.exp_loss={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_lr_corr={self.exp_lr_corr}, self.autolr={self.autolr}")
+                self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * self.last_lr
+                self.exp_lr_sq = autolr_beta * self.exp_lr_sq + (1 - autolr_beta) * self.last_lr ** 2
+                self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_delta
+                self.exp_loss_sq = autolr_beta * self.exp_loss_sq + (1 - autolr_beta) * loss_delta ** 2
+                lr_stdev = (self.exp_lr_sq - self.exp_lr ** 2) ** 0.5 or 1
+                loss_stdev = (self.exp_loss_sq - self.exp_loss ** 2) ** 0.5 or 1
+                self.exp_lr_corr = autolr_beta * self.exp_lr_corr + (1 - autolr_beta) * (lr_diff / lr_stdev) * (loss_diff / loss_stdev)                
+                self.lr_mult *= 1.1 ** -(self.exp_lr_corr * autolr_beta)
+                #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_lr_corr={self.exp_lr_corr}, self.lr_mult={self.lr_mult}")
                 
-            cur_lr = self.lr_mult * random.uniform(0.9, 1.1)
+            cur_lr = random.uniform(0.9, 1.1)
             
             self.last_loss = loss
             self.last_lr = cur_lr
+            
+            cur_lr *= self.lr_mult
         else:
             cur_lr = 1
             
