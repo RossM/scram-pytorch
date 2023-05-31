@@ -1,5 +1,5 @@
 import torch, argparse
-from scram_pytorch import Scram, Simon
+from scram_pytorch import Scram, Simon, AutoLR
 import torch.nn as nn
 
 def parse_args():
@@ -24,6 +24,7 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
     p = nn.Parameter(torch.zeros([inputs.shape[1]], dtype=torch.float32))
     
     optimizer = optimizer_class([p], **opt_args)
+    lr_scheduler = AutoLR(optimizer)
     
     for step in range(steps):
         optimizer.zero_grad()
@@ -32,7 +33,8 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
         if print_all_steps:
             print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
-        optimizer.step(lambda: loss)
+        optimizer.step()
+        lr_scheduler.step(loss)
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
     loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
