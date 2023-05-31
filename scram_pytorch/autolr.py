@@ -62,14 +62,14 @@ class AutoLR:
         self.last_loss = loss
         self.last_rand_lr = rand_lr
         
-        self._last_rand_lr = [base_lr * rand_lr * self.lr_mult for base_lr in self.base_lrs]
+        self._last_lr = [base_lr * rand_lr * self.lr_mult for base_lr in self.base_lrs]
         
-        for i, data in enumerate(zip(self.optimizer.param_groups, self._last_rand_lr)):
+        for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
             param_group, lr = data
             param_group['lr'] = lr
 
-    def get_last_rand_lr(self):
+    def get_last_lr(self):
         """ Return last computed learning rate by current scheduler.
         """
-        return self._last_rand_lr
+        return self._last_lr
 
