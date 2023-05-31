@@ -70,8 +70,9 @@ class Simon(Optimizer):
                 lr_stdev = (self.exp_lr_sq - self.exp_lr ** 2) ** 0.5 or 1
                 loss_stdev = (self.exp_loss_sq - self.exp_loss ** 2) ** 0.5 or 1
                 cov = (lr_diff / lr_stdev) * (loss_diff / loss_stdev)
-                self.exp_cov = autolr_beta * self.exp_cov + (1 - autolr_beta) * cov                
-                self.lr_mult *= 1.1 ** -(self.exp_cov * autolr_beta)
+                self.exp_cov = autolr_beta * self.exp_cov + (1 - autolr_beta) * cov
+                cov = 0.9 * self.exp_cov + 0.1 * cov
+                self.lr_mult *= 1.1 ** -(cov * autolr_beta)
                 #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
                 
             cur_lr = random.uniform(0.9, 1.1)
