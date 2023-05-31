@@ -1,5 +1,5 @@
 import torch, argparse
-from scram_pytorch import Scram, Simon
+from scram_pytorch import Scram, Simon, AutoLR
 import torch.nn as nn
 
 def parse_args():
@@ -10,7 +10,9 @@ def parse_args():
     parser.add_argument("--learning_rate", "--lr", type=float, default=0.5, help="Optimizer learning rate")
     parser.add_argument("--weight_decay", type=float, default=0, help="Optimizer weight decay")
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
-    parser.add_argument("--rmsclip", action="store_true", help="Rurn on RMS clipping (Simon only)")
+    parser.add_argument("--rmsclip", action="store_true", help="Turn on RMS clipping (Simon only)")
+    parser.add_argument("--layerwise", action="store_true", help="Layerwise scaling (Simon only)")
+    parser.add_argument("--autolr", action="store_true", help="Automatic learning rate adjustment (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
     parser.add_argument("--steps", type=int, default=100, help="Number of optimization steps to perform")
     parser.add_argument("--print_all_steps", action="store_true", help="Print all optimization steps")
@@ -22,6 +24,7 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
     p = nn.Parameter(torch.zeros([inputs.shape[1]], dtype=torch.float32))
     
     optimizer = optimizer_class([p], **opt_args)
+    lr_scheduler = AutoLR(optimizer)
     
     for step in range(steps):
         optimizer.zero_grad()
@@ -31,6 +34,7 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
             print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
         optimizer.step()
+        lr_scheduler.step(loss)
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
     loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
@@ -50,6 +54,8 @@ def main():
     elif args.optimizer == "Simon":
         optimizer_class = Simon
         opt_args["rmsclip"] = args.rmsclip
+        opt_args["layerwise"] = args.layerwise
+        opt_args["autolr"] = args.autolr
     elif args.optimizer == "AdamW":
         optimizer_class = torch.optim.AdamW
     elif args.optimizer == "Lion":
