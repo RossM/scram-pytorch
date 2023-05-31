@@ -43,7 +43,7 @@ class Simon(Optimizer):
         self.autolr_steps = 0
         self.exp_loss = self.exp_loss_sq = 0
         self.exp_lr = self.exp_lr_sq = 0
-        self.exp_lr_corr = 0
+        self.exp_cov = 0
         
         super().__init__(params, defaults)
         
@@ -69,9 +69,10 @@ class Simon(Optimizer):
                 self.exp_loss_sq = autolr_beta * self.exp_loss_sq + (1 - autolr_beta) * loss_delta ** 2
                 lr_stdev = (self.exp_lr_sq - self.exp_lr ** 2) ** 0.5 or 1
                 loss_stdev = (self.exp_loss_sq - self.exp_loss ** 2) ** 0.5 or 1
-                self.exp_lr_corr = autolr_beta * self.exp_lr_corr + (1 - autolr_beta) * (lr_diff / lr_stdev) * (loss_diff / loss_stdev)                
-                self.lr_mult *= 1.1 ** -(self.exp_lr_corr * autolr_beta)
-                #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_lr_corr={self.exp_lr_corr}, self.lr_mult={self.lr_mult}")
+                cov = (lr_diff / lr_stdev) * (loss_diff / loss_stdev)
+                self.exp_cov = autolr_beta * self.exp_cov + (1 - autolr_beta) * cov                
+                self.lr_mult *= 1.1 ** -(self.exp_cov * autolr_beta)
+                #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
                 
             cur_lr = random.uniform(0.9, 1.1)
             
