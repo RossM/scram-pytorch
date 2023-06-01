@@ -18,7 +18,7 @@ class AutoLR:
     def __init__(
         self,
         optimizer,
-        betas = (0.9, 0.99),
+        betas = (0.99, 0.9),
         adjustment_rate = 0.1,
         noise_level = 0.1,
         bias = 0,
@@ -82,17 +82,14 @@ class AutoLR:
         #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
             
         # Select a learning rate for the next step
-        # We deliberately only track the random part of the learning rate for calculating the adjustment.
-        # Including the adjustment in the covariance calculations creates correlations over time that
-        # can cause feedback effects and divergence.
-        rand_lr = random.uniform(1 - self.noise_level, 1 + self.noise_level)
+        rand_lr = self.lr_mult * math.exp(random.uniform(1 - self.noise_level, 1 + self.noise_level))
         
         # Save data for next step
         self.last_loss = loss
         self.last_rand_lr = rand_lr
         
         # Calculate learning rates for each parameter group
-        self._last_lr = [base_lr * rand_lr * self.lr_mult for base_lr in self.base_lrs]
+        self._last_lr = [base_lr * rand_lr for base_lr in self.base_lrs]
         
         # Update optimizer learning rates
         for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
