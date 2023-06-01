@@ -82,7 +82,7 @@ class AutoLR:
         #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
             
         # Select a learning rate for the next step
-        rand_lr = self.lr_mult * math.exp(random.uniform(1 - self.noise_level, 1 + self.noise_level))
+        rand_lr = self.lr_mult * math.exp(random.uniform(-self.noise_level, self.noise_level))
         
         # Save data for next step
         self.last_loss = loss
