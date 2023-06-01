@@ -20,7 +20,7 @@ class AutoLR:
         optimizer,
         betas = (0.9, 0.99),
         adjustment_rate = 0.1,
-        noise_level = 0.1,,
+        noise_level = 0.1,
     ):
         self.optimizer = optimizer
         self.betas = betas
