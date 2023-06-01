@@ -6,6 +6,13 @@ class AutoLR:
     """
     A learning rate scheduler that automatically adjusts learning rate by using a zeroth-order
     optimization algorithm to maximize the rate of descent of loss.
+    
+    The algorithm adds a slight random variation to the learning rate each optimization step.
+    It then calculates the covariance between the random value and the change in loss that step,
+    and uses the covariance to determine how to adjust learning rate to increase the change
+    in loss.
+    
+    In practice this may underperform a carefully hand-tuned learning rate.
     """
     
     def __init__(
