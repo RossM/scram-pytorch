@@ -20,10 +20,12 @@ class AutoLR:
         optimizer,
         betas = (0.9, 0.99),
         adjustment_rate = 0.1,
+        noise_level = 0.1,,
     ):
         self.optimizer = optimizer
         self.betas = betas
         self.adjustment_rate = adjustment_rate
+        self.noise_level = noise_level
         
         self.last_rand_lr = 1
         self.lr_mult = 1
@@ -81,7 +83,7 @@ class AutoLR:
         # We deliberately only track the random part of the learning rate for calculating the adjustment.
         # Including the adjustment in the covariance calculations creates correlations over time that
         # can cause feedback effects and divergence.
-        rand_lr = random.uniform(0.9, 1.1)
+        rand_lr = random.uniform(1 - self.noise_level, 1 + self.noise_level)
         
         # Save data for next step
         self.last_loss = loss
