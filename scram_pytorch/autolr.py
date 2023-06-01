@@ -21,11 +21,13 @@ class AutoLR:
         betas = (0.9, 0.99),
         adjustment_rate = 0.1,
         noise_level = 0.1,
+        bias = 0,
     ):
         self.optimizer = optimizer
         self.betas = betas
         self.adjustment_rate = adjustment_rate
         self.noise_level = noise_level
+        self.bias = bias
         
         self.last_rand_lr = 1
         self.lr_mult = 1
@@ -75,7 +77,7 @@ class AutoLR:
         update = self.betas[0] * self.exp_cov + (1 - self.betas[0]) * cov
 
         # Update learning rate based on covariance
-        self.lr_mult *= math.exp(-self.adjustment_rate * update * self.betas[1])
+        self.lr_mult *= math.exp(-self.adjustment_rate * update * self.betas[1] + self.bias)
 
         #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
             
