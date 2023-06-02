@@ -80,7 +80,7 @@ class Simon(Optimizer):
                     stdev = torch.max(stdev, rms)
 
                 # Ad hoc correction factor
-                update *= (grad ** 2).mean() ** 0.5 / max(exp_avg_sq.mean() ** 0.5, eps)
+                update *= (grad ** 2).mean() ** 0.25 / max(exp_avg_sq.mean() ** 0.25, eps)
 
                 update = update / (stdev + eps)
                 # The factor of beta2 corrects stdev from a population standard deviation to a
