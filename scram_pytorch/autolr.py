@@ -75,6 +75,8 @@ class AutoLR:
         
         # Add a bit of damping to the exponential moving average to avoid periodic oscillation
         update = self.betas[0] * self.exp_cov + (1 - self.betas[0]) * cov
+        
+        # Slow updates at the start of training when the moving averages have low info
         update *= (1 - self.betas[1]) / (1 - autolr_beta)
 
         # Update learning rate based on covariance
