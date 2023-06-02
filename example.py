@@ -15,15 +15,17 @@ def parse_args():
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
     parser.add_argument("--steps", type=int, default=100, help="Number of optimization steps to perform")
     parser.add_argument("--print_all_steps", action="store_true", help="Print all optimization steps")
+    parser.add_argument("--autolr", action="store_true", help="Use autolr")
     
     args = parser.parse_args()
     return args
 
-def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=False, opt_args=None):
+def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=False, autolr=False, opt_args=None):
     p = nn.Parameter(torch.zeros([inputs.shape[1]], dtype=torch.float32))
     
     optimizer = optimizer_class([p], **opt_args)
-    lr_scheduler = AutoLR(optimizer)
+    if autolr:
+        lr_scheduler = AutoLR(optimizer)
     
     for step in range(steps):
         optimizer.zero_grad()
@@ -33,7 +35,8 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
             print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
         optimizer.step()
-        lr_scheduler.step(loss)
+        if autolr:
+            lr_scheduler.step(loss)
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
     loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
@@ -77,7 +80,7 @@ def main():
                                  [0, 0, 1, 1]], dtype=torch.float32) * (2 ** -0.5)
         inputs = torch.matmul(inputs, rotation)
 
-    optimize(inputs, target, optimizer_class, steps=args.steps, print_all_steps=args.print_all_steps, opt_args=opt_args)
+    optimize(inputs, target, optimizer_class, steps=args.steps, print_all_steps=args.print_all_steps, autolr=args.autolr, opt_args=opt_args)
 
 if __name__ == "__main__":
     main()
