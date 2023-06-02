@@ -18,12 +18,16 @@ class AutoLR:
     def __init__(
         self,
         optimizer,
-        betas = (0.9, 0.99),
+        betas = (0.5, 0.9),
         adjustment_rate = 0.1,
+        noise_level = 0.01,
+        bias = 1e-3,
     ):
         self.optimizer = optimizer
         self.betas = betas
         self.adjustment_rate = adjustment_rate
+        self.noise_level = noise_level
+        self.bias = bias
         
         self.last_rand_lr = 1
         self.lr_mult = 1
@@ -71,24 +75,24 @@ class AutoLR:
         
         # Add a bit of damping to the exponential moving average to avoid periodic oscillation
         update = self.betas[0] * self.exp_cov + (1 - self.betas[0]) * cov
+        
+        # Slow updates at the start of training when the moving averages have low info
+        update *= (1 - self.betas[1]) / (1 - autolr_beta)
 
         # Update learning rate based on covariance
-        self.lr_mult *= math.exp(-self.adjustment_rate * update * self.betas[1])
+        self.lr_mult *= math.exp(-self.adjustment_rate * update * self.betas[1] + self.bias)
 
         #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
             
         # Select a learning rate for the next step
-        # We deliberately only track the random part of the learning rate for calculating the adjustment.
-        # Including the adjustment in the covariance calculations creates correlations over time that
-        # can cause feedback effects and divergence.
-        rand_lr = random.uniform(0.9, 1.1)
+        rand_lr = self.lr_mult * math.exp(random.uniform(-self.noise_level, self.noise_level))
         
         # Save data for next step
         self.last_loss = loss
         self.last_rand_lr = rand_lr
         
         # Calculate learning rates for each parameter group
-        self._last_lr = [base_lr * rand_lr * self.lr_mult for base_lr in self.base_lrs]
+        self._last_lr = [base_lr * rand_lr for base_lr in self.base_lrs]
         
         # Update optimizer learning rates
         for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
