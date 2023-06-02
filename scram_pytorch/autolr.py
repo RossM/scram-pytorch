@@ -18,10 +18,10 @@ class AutoLR:
     def __init__(
         self,
         optimizer,
-        betas = (0.99, 0.9),
+        betas = (0.5, 0.9),
         adjustment_rate = 0.1,
-        noise_level = 0.1,
-        bias = 0,
+        noise_level = 0.01,
+        bias = 1e-3,
     ):
         self.optimizer = optimizer
         self.betas = betas
