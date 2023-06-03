@@ -84,20 +84,23 @@ class AutoLR:
 
         #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
             
-        # Select a learning rate for the next step
-        rand_lr = self.lr_mult * math.exp(random.uniform(-self.noise_level, self.noise_level))
-        
-        # Save data for next step
+        # Save loss for next step
         self.last_loss = loss
-        self.last_rand_lr = rand_lr
-        
-        # Calculate learning rates for each parameter group
-        self._last_lr = [base_lr * rand_lr for base_lr in self.base_lrs]
-        
-        # Update optimizer learning rates
-        for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
-            param_group, lr = data
-            param_group['lr'] = lr
+
+        if self.steps % 100 == 0:
+            # Select a learning rate for the next step
+            rand_lr = self.lr_mult * math.exp(random.uniform(-self.noise_level, self.noise_level))
+            
+            # Save learning rate for next step
+            self.last_rand_lr = rand_lr
+            
+            # Calculate learning rates for each parameter group
+            self._last_lr = [base_lr * rand_lr for base_lr in self.base_lrs]
+            
+            # Update optimizer learning rates
+            for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
+                param_group, lr = data
+                param_group['lr'] = lr
 
     def get_last_lr(self):
         """ Return last computed learning rate by current scheduler.
