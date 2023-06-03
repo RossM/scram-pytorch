@@ -74,14 +74,17 @@ class Simon(Optimizer):
                     stdev = var.mean() ** 0.5
                 else:
                     stdev = var ** 0.5
+
                 update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
+
                 if rmsclip:
                     rms = (update ** 2).mean() ** 0.5
                     stdev = torch.max(stdev, rms)
 
                 update = update / (stdev + eps)
+
                 # The factor of beta2 corrects stdev from a population standard deviation to a
                 # sample standard deviation
                 p.add_(update, alpha=-lr * beta2)
-        
+
         return loss
