@@ -46,12 +46,7 @@ class AutoLR:
             loss = loss.item()
 
         lr_diff = self.last_rand_lr - self.exp_lr
-
-        if self.last_loss != None:
-            loss_delta = loss - self.last_loss
-        else:
-            loss_delta = 0
-        loss_diff = loss_delta - self.exp_loss
+        loss_diff = loss - self.exp_loss
 
         autolr_beta = min(self.steps / (self.steps + 1), self.betas[1])
 
