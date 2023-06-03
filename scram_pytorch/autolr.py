@@ -55,8 +55,8 @@ class AutoLR:
         # Track exponential moving averages of the 1st and 2nd moments of learning rate and loss delta
         self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * self.last_rand_lr
         self.exp_lr_sq = autolr_beta * self.exp_lr_sq + (1 - autolr_beta) * self.last_rand_lr ** 2
-        self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_delta
-        self.exp_loss_sq = autolr_beta * self.exp_loss_sq + (1 - autolr_beta) * loss_delta ** 2
+        self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss
+        self.exp_loss_sq = autolr_beta * self.exp_loss_sq + (1 - autolr_beta) * loss ** 2
 
         # Calculate standard deviations of learning rate and loss delta
         lr_stdev = (self.exp_lr_sq - self.exp_lr ** 2) ** 0.5 or 1
