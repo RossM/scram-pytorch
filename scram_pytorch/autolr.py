@@ -39,7 +39,7 @@ class AutoLR:
         
         for group in optimizer.param_groups:
             group.setdefault('initial_lr', group['lr'])
-        self.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
+        eelf._last_lr = self.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
         
     def step(self, loss):
         if isinstance(loss, torch.Tensor):
