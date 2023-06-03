@@ -1,3 +1,5 @@
+This repo contains various experiments I'm doing in optimizers and learning rate schedulers.
+
 # scram-pytorch
  SCRAM (**Sc**ale and **R**otation Inv**a**riant **M**omentum) optimizer for PyTorch
 
