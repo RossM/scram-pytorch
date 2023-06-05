@@ -8,6 +8,7 @@ class EnsembleSGD(Optimizer):
         lr: float = 1e-4,
         betas = (0.9, 0.99),
         p = 0.5,
+        swap_ratio = 1.0,
         weight_decay: float = 0,
         eps: float = 1e-15,
     ):
@@ -21,6 +22,7 @@ class EnsembleSGD(Optimizer):
             betas = betas,
             eps = eps,
             p = p,
+            swap_ratio = swap_ratio,
         )
         
         super().__init__(params, defaults)
@@ -40,6 +42,7 @@ class EnsembleSGD(Optimizer):
                 beta1, beta2 = group["betas"]
                 eps = group["eps"]
                 update_p = group["p"]
+                swap_ratio = group["swap_ratio"]
                 state = self.state[p]
                 
                 if len(state) == 0:
@@ -59,7 +62,7 @@ class EnsembleSGD(Optimizer):
                 p.data.add_(update, alpha=-lr)
                 
                 mask = torch.rand_like(p.data) < update_p
-                diff = mask * (backup - p.data)
+                diff = swap_ratio * mask * (backup - p.data)
                 p.data.add_(diff)
                 backup.sub_(diff)
 
