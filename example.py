@@ -1,5 +1,5 @@
 import torch, argparse
-from scram_pytorch import Scram, Simon, AutoLR
+from scram_pytorch import Scram, Simon, AutoLR, EnsembleSGD
 import torch.nn as nn
 
 def parse_args():
@@ -63,6 +63,9 @@ def main():
         from lion_pytorch import Lion
         optimizer_class = Lion
         del opt_args["eps"]
+    elif args.optimizer == "ESGD":
+        optimizer_class = EnsembleSGD
+        del opt_args["betas"]
     else:
         raise ValueError(f"Unknown optimizer {args.optimizer}")
 
