@@ -49,7 +49,7 @@ class EnsembleSGD(Optimizer):
                 exp_avg = state['exp_avg']
                 backup = state['backup']
 
-                grad.div_((grad ** 2).mean() ** 0.5 + eps)
+                grad = grad / ((grad ** 2).mean() ** 0.5 + eps)
 
                 exp_avg.mul_(beta2).add_(grad, alpha=1-beta2)
 
