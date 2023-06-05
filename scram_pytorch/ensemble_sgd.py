@@ -39,7 +39,7 @@ class EnsembleSGD(Optimizer):
                 wd = group["weight_decay"]
                 beta1, beta2 = group["betas"]
                 eps = group["eps"]
-                p = grou["p"]
+                update_p = group["p"]
                 state = self.state[p]
                 
                 if len(state) == 0:
@@ -58,7 +58,7 @@ class EnsembleSGD(Optimizer):
                 update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
                 p.data.add_(update, alpha=-lr)
                 
-                mask = torch.rand_like(p.data) < p
+                mask = torch.rand_like(p.data) < update_p
                 diff = mask * (backup - p.data)
                 p.data.add_(diff)
                 backup.sub_(diff)
