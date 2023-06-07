@@ -31,9 +31,9 @@ For best results, gradient clipping should be disabled.
 # scram_pytorch.esgd
 ESGD (**E**nsemble **S**tochastic **G**radient **D**descent)
 
-A version of stochastic gradient descent (with momentum) that simulates a very large ensemble of
-models by maintaining two copies of each weight, and randomly selecting one copy to use for each
-weight independently at each optimization step. Also includes filterwise normalization.
+A modification of stochastic gradient descent plus momentum and filterwise normalization,
+that simulates a very large ensemble of models by maintaining two copies of each weight
+and randomly selecting one copy to use for each weight independently at each optimization step.
 
 ESGD seems to be particularly good at adversarial training.
 
