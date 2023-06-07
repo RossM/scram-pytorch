@@ -39,19 +39,14 @@ class AutoLR:
         
         for group in optimizer.param_groups:
             group.setdefault('initial_lr', group['lr'])
-        self.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
+        self._last_lr = self.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
         
     def step(self, loss):
         if isinstance(loss, torch.Tensor):
             loss = loss.item()
 
         lr_diff = self.last_rand_lr - self.exp_lr
-
-        if self.last_loss != None:
-            loss_delta = loss - self.last_loss
-        else:
-            loss_delta = 0
-        loss_diff = loss_delta - self.exp_loss
+        loss_diff = loss - self.exp_loss
 
         autolr_beta = min(self.steps / (self.steps + 1), self.betas[1])
 
@@ -60,8 +55,8 @@ class AutoLR:
         # Track exponential moving averages of the 1st and 2nd moments of learning rate and loss delta
         self.exp_lr = autolr_beta * self.exp_lr + (1 - autolr_beta) * self.last_rand_lr
         self.exp_lr_sq = autolr_beta * self.exp_lr_sq + (1 - autolr_beta) * self.last_rand_lr ** 2
-        self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss_delta
-        self.exp_loss_sq = autolr_beta * self.exp_loss_sq + (1 - autolr_beta) * loss_delta ** 2
+        self.exp_loss = autolr_beta * self.exp_loss + (1 - autolr_beta) * loss
+        self.exp_loss_sq = autolr_beta * self.exp_loss_sq + (1 - autolr_beta) * loss ** 2
 
         # Calculate standard deviations of learning rate and loss delta
         lr_stdev = (self.exp_lr_sq - self.exp_lr ** 2) ** 0.5 or 1
@@ -84,20 +79,23 @@ class AutoLR:
 
         #print(f"self.exp_lr={self.exp_lr}, self.exp_loss={self.exp_loss}, self.exp_cov={self.exp_cov}, self.lr_mult={self.lr_mult}")
             
-        # Select a learning rate for the next step
-        rand_lr = self.lr_mult * math.exp(random.uniform(-self.noise_level, self.noise_level))
-        
-        # Save data for next step
+        # Save loss for next step
         self.last_loss = loss
-        self.last_rand_lr = rand_lr
-        
-        # Calculate learning rates for each parameter group
-        self._last_lr = [base_lr * rand_lr for base_lr in self.base_lrs]
-        
-        # Update optimizer learning rates
-        for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
-            param_group, lr = data
-            param_group['lr'] = lr
+
+        if self.steps % 100 == 0:
+            # Select a learning rate for the next step
+            rand_lr = self.lr_mult * math.exp(random.uniform(-self.noise_level, self.noise_level))
+            
+            # Save learning rate for next step
+            self.last_rand_lr = rand_lr
+            
+            # Calculate learning rates for each parameter group
+            self._last_lr = [base_lr * rand_lr for base_lr in self.base_lrs]
+            
+            # Update optimizer learning rates
+            for i, data in enumerate(zip(self.optimizer.param_groups, self._last_lr)):
+                param_group, lr = data
+                param_group['lr'] = lr
 
     def get_last_lr(self):
         """ Return last computed learning rate by current scheduler.
