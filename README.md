@@ -29,7 +29,7 @@ Recommended hyperparameters for a model where AdamW is best at lr=1e-4:
 For best results, gradient clipping should be disabled.
 
 # scram_pytorch.esgd
-ESGD (**E**nsemble **S**tochastic **G**radient **D**descent)
+ESGD (**E**nsemble **S**tochastic **G**radient **D**escent)
 
 A modification of stochastic gradient descent plus momentum and filterwise normalization,
 that simulates a very large ensemble of models by maintaining two copies of each weight
