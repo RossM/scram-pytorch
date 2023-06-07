@@ -2,6 +2,13 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 class EnsembleSGD(Optimizer):
+    """
+    Ensemble Stochastic Gradient Descent
+    
+    This optimizer simulates optimizing a large ensemble of models by maintaining
+    two copies of the model weights and randomly selecting one of the copies for
+    each scalar weight at each training step.
+    """
     def __init__(
         self,
         params,
