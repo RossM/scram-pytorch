@@ -12,6 +12,8 @@ Recommended hyperparameters for a model where AdamW is best at lr=1e-4:
 |---|---|---|---|
 |1e-15|1e-6|0.98|0.99|
 
+For best results, gradient clipping should be disabled.
+
 # scram_pytorch.simon
 SIMON (**Si**gma **Mo**me**n**tum)
  
@@ -23,6 +25,8 @@ Recommended hyperparameters for a model where AdamW is best at lr=1e-4:
 |eps|learning rate|beta1|beta2|rmsclip|layerwise|normalize|
 |---|---|---|---|---|---|---|
 |1e-15|1e-4|0.98|0.99|False|False|False|
+
+For best results, gradient clipping should be disabled.
 
 # scram_pytorch.esgd
 ESGD (**E**nsemble **S**tochastic **G**radient **D**descent)
@@ -38,3 +42,5 @@ Recommended hyperparameters for a model where AdamW is best at lr=1e-4:
 |eps|learning rate|beta1|beta2|p|swap_ratio|
 |---|---|---|---|---|---|
 |1e-15|1e-4|0.99|0.99|0.5|0.99|
+
+For best results, gradient clipping should be disabled.
