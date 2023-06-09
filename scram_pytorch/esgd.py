@@ -19,6 +19,7 @@ class EnsembleSGD(Optimizer):
         weight_decay: float = 0,
         eps: float = 1e-15,
         ungroup_dims = None,
+        normalize = True,
     ):
         assert lr > 0.
         assert 0. <= betas[0] <= 1.
@@ -32,6 +33,7 @@ class EnsembleSGD(Optimizer):
             p = p,
             swap_ratio = swap_ratio,
             ungroup_dims = ungroup_dims,
+            normalize = normalize,
         )
         
         super().__init__(params, defaults)
@@ -53,6 +55,7 @@ class EnsembleSGD(Optimizer):
                 update_p = group["p"]
                 swap_ratio = group["swap_ratio"]
                 ungroup_dims = group.get("ungroup_dims") or []
+                normalize = group.get("normalize", True)
                 state = self.state[p]
                 
                 if len(state) == 0:
@@ -62,8 +65,9 @@ class EnsembleSGD(Optimizer):
                 exp_avg = state['exp_avg']
                 backup = state['backup']
 
-                mean_dims = [x for x in range(0, len(p.data.shape)) if not x in ungroup_dims]
-                grad = grad / ((grad ** 2).mean(dim=mean_dims, keepdim=True) ** 0.5 + eps)
+                if normalize:
+                    mean_dims = [x for x in range(0, len(p.data.shape)) if not x in ungroup_dims]
+                    grad = grad / ((grad ** 2).mean(dim=mean_dims, keepdim=True) ** 0.5 + eps)
 
                 exp_avg.mul_(beta2).add_(grad, alpha=1-beta2)
 
