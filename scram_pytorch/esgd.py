@@ -62,8 +62,9 @@ class EnsembleSGD(Optimizer):
                 exp_avg = state['exp_avg']
                 backup = state['backup']
 
-                mean_dims = [x for x in range(0, len(p.data.shape)) if not x in ungroup_dims]
-                grad = grad / ((grad ** 2).mean(dim=mean_dims, keepdim=True) ** 0.5 + eps)
+                #mean_dims = [x for x in range(0, len(p.data.shape)) if not x in ungroup_dims]
+                #grad = grad / ((grad ** 2).mean(dim=mean_dims, keepdim=True) ** 0.5 + eps)
+                grad = grad.sign()
 
                 exp_avg.mul_(beta2).add_(grad, alpha=1-beta2)
 
