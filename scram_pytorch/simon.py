@@ -77,7 +77,7 @@ class Simon(Optimizer):
                     exp_avg_sq.mul_(beta2).add_(grad**2, alpha=1-beta2)
                     var = exp_avg_sq - exp_avg ** 2
                 
-                stdev = var ** 0.5
+                stdev = torch.clamp(var, min=0) ** 0.5
 
                 update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
 
