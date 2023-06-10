@@ -92,7 +92,7 @@ class Simon(Optimizer):
                 
                 if distance_weighted:
                     exp_distance = state['exp_distance']
-                    distance = grad.abs()
+                    distance = grad.abs() * (1 - beta2)
                     weight = distance / (exp_distance + distance)
                     exp_distance.mul_(beta2).add(distance, alpha=1-beta2)
                     exp_avg.mul_(1 - weight).add_(grad * weight)
