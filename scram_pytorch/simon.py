@@ -56,7 +56,10 @@ class Simon(Optimizer):
                 
                 if len(state) == 0:
                     state['exp_avg'] = torch.zeros_like(p)
-                    state['exp_avg_sq'] = torch.zeros_like(p)
+                    if layerwise:
+                        state['exp_avg_sq'] = torch.zeros([], device=p.device, dtype=p.dtype)
+                    else:
+                        state['exp_avg_sq'] = torch.zeros_like(p)
 
                 exp_avg = state['exp_avg']
                 exp_avg_sq = state['exp_avg_sq']
@@ -67,13 +70,14 @@ class Simon(Optimizer):
                 p.data.mul_(1 - lr * wd)
                 
                 exp_avg.mul_(beta2).add_(grad, alpha=1-beta2)
-                exp_avg_sq.mul_(beta2).add_(grad**2, alpha=1-beta2)
-                
-                var = (exp_avg_sq - exp_avg ** 2)
                 if layerwise:
-                    stdev = var.mean() ** 0.5
+                    exp_avg_sq.mul_(beta2).add_((grad**2).mean(), alpha=1-beta2)
+                    var = exp_avg_sq - (exp_avg ** 2).mean()
                 else:
-                    stdev = var ** 0.5
+                    exp_avg_sq.mul_(beta2).add_(grad**2, alpha=1-beta2)
+                    var = exp_avg_sq - exp_avg ** 2
+                
+                stdev = torch.clamp(var, min=0) ** 0.5
 
                 update = exp_avg.clone().mul_(beta1).add_(grad, alpha=1-beta1)
 
