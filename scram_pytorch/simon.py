@@ -13,11 +13,12 @@ class Simon(Optimizer):
     Arguments:
         params: iterable of parameters to optimize or dicts defining parameter groups
         lr: learning rate
-        betas: coefficients used for computing a running average of gradient and curvature,
-            and for damping oscillations caused by momentum
-        weight_decay: decoupled way decay coefficient
+        betas: coefficients. the first one controls the strength of effect of momentum.
+            the second controls the timescale of the running averages for momentum and
+            standard deviation calculations.
+        weight_decay: decoupled weight decay coefficient
         eps: term added to the denominator to improve numerical stability
-        rmsclip: whether to limit the size of updatea when curvature is very small
+        rmsclip: whether to limit the size of updates when curvature is very small
         layerwise: whether to calculate curvature per-parameter rather than per-weight.
             typically causes slower convergence, but halves memory usage.
         normalize: whether to normalize gradients per-parameter before other calculations
