@@ -2,12 +2,26 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 class Simon(Optimizer):
-    """SIgma MOmeNtum (SIMON) optimizer
+    """
+    SIgma MOmeNtum (SIMON) optimizer
     
     This optimizer uses the standard deviation of each gradient over time, computed
     using an exponential moving average, as an estimate of the second derivative of
     the loss in order to take small steps when loss is changing quickly and large
-    steps when it is changing smoothly."""
+    steps when it is changing smoothly.
+    
+    Arguments:
+        params: iterable of parameters to optimize or dicts defining parameter groups
+        lr: learning rate
+        betas: coefficients used for computing a running average of gradient and curvature,
+            and for damping oscillations caused by momentum
+        weight_decay: decoupled way decay coefficient
+        eps: term added to the denominator to improve numerical stability
+        rmsclip: whether to limit the size of updatea when curvature is very small
+        layerwise: whether to calculate curvature per-parameter rather than per-weight.
+            typically causes slower convergence, but halves memory usage.
+        normalize: whether to normalize gradients per-parameter before other calculations
+    """
     def __init__(
         self,
         params,
