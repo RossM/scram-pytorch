@@ -1,6 +1,5 @@
 import random, math
 import torch, numpy
-from torch.optim.lr_scheduler import LRScheduler
 
 class AutoLR:
     """
