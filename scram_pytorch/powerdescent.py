@@ -8,6 +8,7 @@ class PowerDescent(Optimizer):
         lr: float = 1e-4,
         weight_decay: float = 0,
         eps: float = 1e-15,
+        n: int = 1
     ):
         assert lr > 0.
         
@@ -15,6 +16,7 @@ class PowerDescent(Optimizer):
             lr = lr,
             weight_decay = weight_decay,
             eps = eps,
+            n = n
         )
         
         super().__init__(params, defaults)
@@ -32,13 +34,14 @@ class PowerDescent(Optimizer):
                 lr = group["lr"]
                 wd = group["weight_decay"]
                 eps = group["eps"]
+                n = group["n"]
                 state = self.state[p]
 
                 grad_reshape = grad.reshape((-1, grad.shape[-1]))
                 iters = 1
                 
                 if len(state) == 0:
-                    state['a'] = torch.randn((1, grad_reshape.shape[0]), device=grad.device, dtype=grad.dtype)
+                    state['a'] = torch.randn((n, grad_reshape.shape[0]), device=grad.device, dtype=grad.dtype)
                     iters = 15
 
                 a = state['a']
@@ -47,11 +50,15 @@ class PowerDescent(Optimizer):
                     b = (a @ grad_reshape).t()
                     b.div_(b.norm() + eps)
                     a = (grad_reshape @ b).t()
+                    if n > 1:
+                        # This applies a linear transformation to make the rows of a orthonormal
+                        conditioner = torch.linalg.cholesky(a @ a.t() + eps * torch.eye(n, device=grad.device, dtype=grad.dtype)).inverse()
+                        a = conditioner @ a
                     a.div_(a.norm() + eps)
 
-                step_size = -lr * (a @ grad_reshape @ b).squeeze()
+                step = (a.t() @ (a @ grad_reshape @ b) @ b.t())
 
-                p.data.add_((a * b).t().reshape(grad.shape), alpha=step_size)
+                p.data.add_(step.reshape(grad.shape), alpha=-lr)
                 
                 state['a'] = a
 

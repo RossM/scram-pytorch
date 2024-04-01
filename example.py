@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument("--weight_decay", type=float, default=0, help="Optimizer weight decay")
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
     parser.add_argument("--rmsclip", action="store_true", help="Turn on RMS clipping (Simon only)")
+    parser.add_argument("--n", type=int, default=1, help="Optimizer n")
     parser.add_argument("--layerwise", action="store_true", help="Layerwise scaling (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
     parser.add_argument("--steps", type=int, default=100, help="Number of optimization steps to perform")
@@ -78,6 +79,7 @@ def main():
         optimizer_class = PowerDescent
         del opt_args["betas"]
         del opt_args["eps"]
+        opt_args["n"] = args.n
     else:
         raise ValueError(f"Unknown optimizer {args.optimizer}")
 
