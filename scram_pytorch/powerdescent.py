@@ -7,12 +7,14 @@ class PowerDescent(Optimizer):
         params,
         lr: float = 1e-4,
         weight_decay: float = 0,
+        eps: float = 1e-15,
     ):
         assert lr > 0.
         
         defaults = dict(
             lr = lr,
             weight_decay = weight_decay,
+            eps = eps,
         )
         
         super().__init__(params, defaults)
@@ -29,6 +31,7 @@ class PowerDescent(Optimizer):
                 grad = p.grad
                 lr = group["lr"]
                 wd = group["weight_decay"]
+                eps = group["eps"]
                 state = self.state[p]
 
                 grad_reshape = grad.reshape((-1, grad.shape[-1]))
@@ -42,13 +45,13 @@ class PowerDescent(Optimizer):
                 
                 for _ in range(iters):
                     b = (a @ grad_reshape).t()
-                    b.div_(b.norm())
+                    b.div_(b.norm() + eps)
                     a = (grad_reshape @ b).t()
-                    a.div_(a.norm())
+                    a.div_(a.norm() + eps)
 
-                step = -lr * (a @ grad_reshape @ b).squeeze()
+                step_size = -lr * (a @ grad_reshape @ b).squeeze()
 
-                p.data.add_((a * b).t().reshape(grad.shape), alpha = step)
+                p.data.add_((a * b).t().reshape(grad.shape), alpha=step_size)
                 
                 state['a'] = a
 

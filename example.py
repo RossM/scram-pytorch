@@ -32,9 +32,9 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
         optimizer.zero_grad()
         pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
         loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
-        if print_all_steps:
-            print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
+        if print_all_steps:
+            print(f"step={step}\np={p.data}\ngrad={p.grad}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         optimizer.step()
         if autolr:
             lr_scheduler.step(loss)
