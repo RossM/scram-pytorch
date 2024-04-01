@@ -52,8 +52,8 @@ class PowerDescent(Optimizer):
                     a = (grad_reshape @ b).t()
                     if n > 1:
                         # This applies a linear transformation to make the rows of a orthonormal
-                        conditioner = torch.linalg.cholesky(a @ a.t() + eps * torch.eye(n, device=grad.device, dtype=grad.dtype)).inverse()
-                        a = conditioner @ a
+                        ch, l = torch.linalg.cholesky_ex(a @ a.t() + eps * torch.eye(n, device=grad.device, dtype=grad.dtype))
+                        a = ch.inverse() @ a
                     a.div_(a.norm() + eps)
 
                 step = (a.t() @ (a @ grad_reshape @ b) @ b.t())
