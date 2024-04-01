@@ -1,5 +1,6 @@
 import torch, argparse
-from scram_pytorch import Scram, Simon, AutoLR, EnsembleSGD
+from scram_pytorch import Scram, Simon, AutoLR, EnsembleSGD, PowerDescent
+from torch.optim import SGD, AdamW
 import torch.nn as nn
 
 def parse_args():
@@ -51,7 +52,14 @@ def main():
         "eps": args.epsilon,
     }
     
-    if args.optimizer == "Scram":
+    if args.optimizer == "SGD":
+        optimizer_class = SGD
+        del opt_args["betas"]
+        del opt_args["eps"]
+        opt_args["momentum"] = args.beta1
+    elif args.optimizer == "AdamW":
+        optimizer_class = AdamW
+    elif args.optimizer == "Scram":
         optimizer_class = Scram
     elif args.optimizer == "Simon":
         optimizer_class = Simon
@@ -66,6 +74,10 @@ def main():
     elif args.optimizer == "ESGD":
         optimizer_class = EnsembleSGD
         del opt_args["betas"]
+    elif args.optimizer == "PowerDescent":
+        optimizer_class = PowerDescent
+        del opt_args["betas"]
+        del opt_args["eps"]
     else:
         raise ValueError(f"Unknown optimizer {args.optimizer}")
 
