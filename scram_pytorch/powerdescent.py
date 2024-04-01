@@ -57,8 +57,10 @@ class PowerDescent(Optimizer):
                             a = ch.inverse() @ a
                     a.div_(a.norm() + eps)
 
-                step = (a.t() @ (a @ grad_reshape @ b) @ b.t())
+                sv = (a @ grad_reshape @ b).diag()[None, :]
+                step = (sv * a.t()) @ b.t()
 
+                p.data.mul_(1 - lr * wd)
                 p.data.add_(step.reshape(grad.shape), alpha=-lr)
                 
                 state['a'] = a
