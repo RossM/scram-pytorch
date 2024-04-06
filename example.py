@@ -39,6 +39,9 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
         optimizer.step()
         if autolr:
             lr_scheduler.step(loss)
+            
+    if optimizer_class.__name__ == "AdamWScheduleFree":
+        optimizer.eval()
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
     loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
@@ -80,6 +83,9 @@ def main():
         del opt_args["betas"]
         del opt_args["eps"]
         opt_args["n"] = args.n
+    elif args.optimizer == "AdamWScheduleFree":
+        from schedulefree import AdamWScheduleFree
+        optimizer_class = AdamWScheduleFree
     else:
         raise ValueError(f"Unknown optimizer {args.optimizer}")
 
