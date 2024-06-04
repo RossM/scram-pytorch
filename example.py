@@ -1,5 +1,5 @@
 import torch, argparse
-from scram_pytorch import Scram, Simon, AutoLR, EnsembleSGD, PowerDescent
+from scram_pytorch import *
 from torch.optim import SGD, AdamW
 import torch.nn as nn
 
@@ -83,6 +83,9 @@ def main():
         del opt_args["betas"]
         del opt_args["eps"]
         opt_args["n"] = args.n
+    elif args.optimizer == "Mystery":
+        optimizer_class = Mystery
+        del opt_args["eps"]
     elif args.optimizer == "AdamWScheduleFree":
         from schedulefree import AdamWScheduleFree
         optimizer_class = AdamWScheduleFree
