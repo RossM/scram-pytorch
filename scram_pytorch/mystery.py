@@ -43,9 +43,14 @@ class Mystery(Optimizer):
                 if len(state) == 0:
                     state['exp_avg'] = torch.zeros_like(p)
                     state['backup'] = p.data.clone()
+                    state['step'] = torch.tensor(0)
 
                 exp_avg = state['exp_avg']
                 backup = state['backup']
+                step = state['step']
+                
+                step += 1
+                bias_correction = 1 - beta2 ** step
 
                 grad = grad.sign()
 
@@ -54,8 +59,8 @@ class Mystery(Optimizer):
                 p.data.mul_(1 - lr * wd)
                 
                 p.data.add_(grad, alpha=-lr*(1-beta1))
-                p.data.add_(exp_avg, alpha=-lr*beta1)
-                backup.add_(exp_avg, alpha=-lr)
+                p.data.add_(exp_avg, alpha=-lr*beta1/bias_correction)
+                backup.add_(exp_avg, alpha=-lr/bias_correction)
                 
         return loss
 
