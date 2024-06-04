@@ -10,6 +10,7 @@ class Mystery(Optimizer):
         lr: float = 1e-4,
         betas = (0.9, 0.99),
         weight_decay: float = 0,
+        polyak: bool = False
     ):
         assert lr > 0.
         assert 0. <= betas[0] <= 1.
@@ -21,12 +22,15 @@ class Mystery(Optimizer):
             lr = lr,
             weight_decay = weight_decay,
             betas = betas,
+            polyak = polyak,
         )
         
         super().__init__(params, defaults)
         
     @torch.no_grad()
     def step(self, closure=None):
+        self.train()
+
         loss = None
         if closure != None:
             with torch.enable_grad():
@@ -37,6 +41,7 @@ class Mystery(Optimizer):
                 grad = p.grad
                 lr = group["lr"]
                 wd = group["weight_decay"]
+                polyak = group["polyak"]
                 beta1, beta2 = group["betas"]
                 state = self.state[p]
                 
@@ -50,7 +55,11 @@ class Mystery(Optimizer):
                 step = state['step']
                 
                 step += 1
-                bias_correction = 1 - beta2 ** step
+                if polyak:
+                    beta2 = 1 - 1 / step
+                    bias_correction = 1
+                else:
+                    bias_correction = 1 - beta2 ** step
 
                 grad = grad.sign()
 
@@ -78,7 +87,7 @@ class Mystery(Optimizer):
 
                 # Swap the values of p and backup, without copying memory
                 tmp = p.data
-                p.set_(backup)
+                p.set_(backup.data)
                 backup.set_(tmp)
     
     def test(self):

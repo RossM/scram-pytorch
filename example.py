@@ -13,6 +13,7 @@ def parse_args():
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
     parser.add_argument("--rmsclip", action="store_true", help="Turn on RMS clipping (Simon only)")
     parser.add_argument("--n", type=int, default=1, help="Optimizer n")
+    parser.add_argument("--polyak", action="store_true", help="Use Polyak weight averaging (Mystery only)")
     parser.add_argument("--layerwise", action="store_true", help="Layerwise scaling (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
     parser.add_argument("--steps", type=int, default=100, help="Number of optimization steps to perform")
@@ -40,7 +41,7 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
         if autolr:
             lr_scheduler.step(loss)
             
-    if optimizer_class.__name__ == "AdamWScheduleFree":
+    if hasattr(optimizer, "eval"):
         optimizer.eval()
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
@@ -86,6 +87,7 @@ def main():
     elif args.optimizer == "Mystery":
         optimizer_class = Mystery
         del opt_args["eps"]
+        opt_args["polyak"] = args.polyak
     elif args.optimizer == "AdamWScheduleFree":
         from schedulefree import AdamWScheduleFree
         optimizer_class = AdamWScheduleFree
