@@ -1,5 +1,6 @@
 import torch, argparse
-from scram_pytorch import Scram, Simon, AutoLR, EnsembleSGD
+from scram_pytorch import *
+from torch.optim import SGD, AdamW
 import torch.nn as nn
 
 def parse_args():
@@ -11,6 +12,8 @@ def parse_args():
     parser.add_argument("--weight_decay", type=float, default=0, help="Optimizer weight decay")
     parser.add_argument("--epsilon", type=float, default=1e-15, help="Optimizer epsilon")
     parser.add_argument("--rmsclip", action="store_true", help="Turn on RMS clipping (Simon only)")
+    parser.add_argument("--n", type=int, default=1, help="Optimizer n")
+    parser.add_argument("--polyak", action="store_true", help="Use Polyak weight averaging (Mystery only)")
     parser.add_argument("--layerwise", action="store_true", help="Layerwise scaling (Simon only)")
     parser.add_argument("--rotate_dimensions", action="store_true", help="Apply a transformation that mixes the model channels while leaving the optimum solution unchanged")
     parser.add_argument("--steps", type=int, default=100, help="Number of optimization steps to perform")
@@ -31,12 +34,15 @@ def optimize(inputs, target, optimizer_class, *, steps=100, print_all_steps=Fals
         optimizer.zero_grad()
         pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
         loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
-        if print_all_steps:
-            print(f"step={step}\np={p.data}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         loss.backward()
+        if print_all_steps:
+            print(f"step={step}\np={p.data}\ngrad={p.grad}\nerr={torch.abs(pred - target).detach()}\nloss={loss}\n")
         optimizer.step()
         if autolr:
             lr_scheduler.step(loss)
+            
+    if hasattr(optimizer, "eval"):
+        optimizer.eval()
 
     pred = torch.sigmoid(torch.einsum('y x, x -> y', inputs, p))
     loss = ((pred - target) ** 2).mean() + 0.1 * (p ** 2).mean()
@@ -51,7 +57,14 @@ def main():
         "eps": args.epsilon,
     }
     
-    if args.optimizer == "Scram":
+    if args.optimizer == "SGD":
+        optimizer_class = SGD
+        del opt_args["betas"]
+        del opt_args["eps"]
+        opt_args["momentum"] = args.beta1
+    elif args.optimizer == "AdamW":
+        optimizer_class = AdamW
+    elif args.optimizer == "Scram":
         optimizer_class = Scram
     elif args.optimizer == "Simon":
         optimizer_class = Simon
@@ -66,6 +79,18 @@ def main():
     elif args.optimizer == "ESGD":
         optimizer_class = EnsembleSGD
         del opt_args["betas"]
+    elif args.optimizer == "PowerDescent":
+        optimizer_class = PowerDescent
+        del opt_args["betas"]
+        del opt_args["eps"]
+        opt_args["n"] = args.n
+    elif args.optimizer == "Mystery":
+        optimizer_class = Mystery
+        del opt_args["eps"]
+        opt_args["polyak"] = args.polyak
+    elif args.optimizer == "AdamWScheduleFree":
+        from schedulefree import AdamWScheduleFree
+        optimizer_class = AdamWScheduleFree
     else:
         raise ValueError(f"Unknown optimizer {args.optimizer}")
 
